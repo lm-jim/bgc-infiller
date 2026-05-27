@@ -38,8 +38,9 @@ You can access the online deployment through the following link:
 
 ## Enlaces de interés
 
-| Recurso                   | Enlace                                                                   |
-| :------------------------ | :----------------------------------------------------------------------- |
-| GitHub Repository         | https://github.com/lm-jim/bgc-infiller                                   |
-| Weights & Biases          | https://wandb.ai/lm-jim-universidad-polit-cnica-de-madrid/bgc-infiller/  |
-| HuggingFace Space         | https://huggingface.co/spaces/lm-jim/bgc-infiller/                       |
+| Resource          | Link                                                                    |
+| :---------------- | :---------------------------------------------------------------------- |
+| GitHub Repository | https://github.com/lm-jim/bgc-infiller                                  |
+| Weights & Biases  | https://wandb.ai/lm-jim-universidad-polit-cnica-de-madrid/bgc-infiller/ |
+| HuggingFace Space | https://huggingface.co/spaces/lm-jim/bgc-infiller/                      |
+| HuggingFace Model | https://huggingface.co/lm-jim/bgc-infiller/                             |
