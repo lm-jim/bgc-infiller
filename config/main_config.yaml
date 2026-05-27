@@ -1,0 +1,2 @@
+model_config: test-model-mini.yaml
+data_path: ./data
