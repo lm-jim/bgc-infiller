@@ -5,7 +5,7 @@ def get_base_model(config):
     return AutoModelForMaskedLM.from_pretrained(model_checkpoint), AutoTokenizer.from_pretrained(model_checkpoint)
 
 
-def get_model_training_hyperparameters(config, tokenizer):
+def get_model_training_hyperparameters(config, tokenizer, use_fp16=True):
     model_config = config['model_config']
     model_name_version = f"{model_config['model_info']['model_name']}-v{model_config['model_info']['model_version']}"
 
@@ -24,7 +24,7 @@ def get_model_training_hyperparameters(config, tokenizer):
         learning_rate=model_config["train_params"]["lr"],
         weight_decay=model_config["train_params"]["weight_decay"],
         logging_steps=model_config["train_params"]["logging_steps"],
-        fp16=True,
+        fp16=use_fp16,
         report_to="wandb",
         run_name=model_name_version,
         eval_strategy="steps",

@@ -7,7 +7,7 @@ from datasets import Dataset
 from transformers import Trainer
 from transformers import AutoModelForMaskedLM
 
-def run_training_pipeline(config_file, preprocess_data=True):
+def run_training_pipeline(config_file, preprocess_data=True, use_fp16=True):
     print(f"--- BGC INFILLER TRAINING PIPELINE BEGIN ---")
 
     print(f"Loading configuration from {config_file}")
@@ -63,7 +63,7 @@ def run_training_pipeline(config_file, preprocess_data=True):
     eval_data = tokenized_dataset["test"]
 
     logger.info(f"Running training for model {model_name_version}")
-    data_collator, training_args = model.get_model_training_hyperparameters(config, base_tokenizer)
+    data_collator, training_args = model.get_model_training_hyperparameters(config, base_tokenizer, use_fp16)
 
     trainer = Trainer(
         model=base_model,
