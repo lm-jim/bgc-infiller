@@ -38,9 +38,10 @@ jobs:
                   fetch-depth: 0
 
             - name: Despliegue en Hugging Face
-              uses: huggingface/github-action@v1
+              uses: huggingface/hub-sync@v0.1.0
               with:
+                  github_repo_id: ${{ github.repository }}
+                  huggingface_repo_id: lm-jim/bgc-infiller
                   hf_token: ${{ secrets.HF_TOKEN }}
-                  repo_id: lm-jim/bgc-infiller
                   repo_type: space
-                  path: space
+                  subdirectory: space
