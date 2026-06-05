@@ -1,6 +1,7 @@
 from datasets import Dataset
 import wandb
 import os
+import pytest
 from src import data_loader, utils, model, train, bgc_tokenizer
 
 def test_load_config():
