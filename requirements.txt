@@ -13,4 +13,4 @@ tqdm==4.67.3
 biopython==1.87
 gradio==6.15.1
 pytest==9.0.3
-accelerate==0.21.0
+accelerate==0.31.0
