@@ -23,7 +23,7 @@ jobs:
 
             - name: Ejecución de tests
               env:
-                  PYTHONPATH: ./src
+                  PYTHONPATH: .
               run: pytest
     deploy:
         runs-on: ubuntu-latest
