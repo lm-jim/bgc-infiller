@@ -2,8 +2,7 @@ import logging
 import os
 import torch
 import wandb
-import data_loader
-import utils, model, bgc_tokenizer
+from src import data_loader, utils, model, bgc_tokenizer
 from datasets import Dataset
 from transformers import Trainer
 from transformers import AutoModelForMaskedLM
@@ -17,10 +16,10 @@ def run_training_pipeline(config_file, preprocess_data=True):
     model_name_version = f"{model_config['model_info']['model_name']}-v{model_config['model_info']['model_version']}"
     print(f"Configuration loaded successfully. Model Config: {model_name_version}")
     
-    print(f"Setting up logging with level: {model_config['logging_level']}")
-    utils.setup_logging(model_config['logging_level'])
+    print(f"Setting up logging with level: {model_config['log_level']}")
+    utils.setup_logging(model_config['log_level'])
     logger = logging.getLogger(__name__)
-    print(f"Logging setup complete at level: {model_config['logging_level']}")
+    print(f"Logging setup complete at level: {model_config['log_level']}")
     logger.info(f"Switching to logging mode from now on.")
 
     logger.info(f"Initializing Weights & Biases...")

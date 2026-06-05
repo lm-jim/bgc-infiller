@@ -1,4 +1,3 @@
-import utils
 from transformers import AutoModelForMaskedLM, AutoTokenizer, DataCollatorForLanguageModeling, TrainingArguments
 
 def get_base_model(config):
