@@ -1,12 +1,13 @@
 import os
 import torch
 import wandb
+import data_loader
 import utils, model, bgc_tokenizer
 from datasets import Dataset
 from transformers import Trainer
 from transformers import AutoModelForMaskedLM
 
-def run_training_pipeline(config_file):
+def run_training_pipeline(config_file, preprocess_data=True):
     print(f"--- BGC INFILLER TRAINING PIPELINE BEGIN ---")
 
     print(f"Loading configuration from {config_file}")
@@ -24,11 +25,15 @@ def run_training_pipeline(config_file):
     )
 
     print(f"Loading and formatting raw BGC data...")
-
     utils.gbl_set_seed(model_config["train_params"]["seed"])
+    
+    if preprocess_data:
+        df = data_loader.build_bgc_dataframe(f"{config['data_path']}")
+        df.to_csv(f"{config['data_path']}/BGC_Data.csv", index=False)
+
     df = utils.read_bgcs_from_csv(f"{config['data_path']}/BGC_Data.csv")
 
-    print(f"BGC data loaded and formatted successfully. Total BGCs: {len(df)}")
+    print(f"BGC data formatted and loaded successfully. Total BGCs: {len(df)}")
     
     print(f"Retrieving base model {model_config['model_info']['base_model']}...")
     base_model, base_tokenizer = model.get_base_model(config)
@@ -85,5 +90,3 @@ def run_training_pipeline(config_file):
     wandb.finish()
 
     print(f"--- BGC INFILLER TRAINING PIPELINE END ---")
-
-run_training_pipeline("config/main_config.yaml")
