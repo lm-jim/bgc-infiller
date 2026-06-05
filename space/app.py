@@ -84,8 +84,8 @@ def infill_protein(sequence, model, creativity):
 
 
 with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
-    gr.Markdown("# 🧬 Biosynthetic Genomic Cluster (BGC) Infiller 🧬")
-    gr.Markdown("A fine-tuned ESM2 model for infilling BGCs (Biosynthetic Genomic Clusters)")
+    gr.Markdown("# 🧬 Biosynthetic Gene Cluster (BGC) Infiller 🧬")
+    gr.Markdown("A fine-tuned ESM2 model for infilling BGCs (Biosynthetic Gene Clusters)")
 
     with gr.Row():
         input_species = gr.Textbox(

@@ -1,6 +1,6 @@
 model_info:
     model_name: test-mini
-    model_version: 1.0
+    model_version: 1.0.0
     wandb_project: bgc-infiller
     base_model: facebook/esm2_t6_8M_UR50D
 

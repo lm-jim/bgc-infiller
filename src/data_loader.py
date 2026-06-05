@@ -46,6 +46,3 @@ def build_bgc_dataframe(folder_path):
             all_data.append(data_row)
 
     return pd.DataFrame(all_data)[['BGC', 'class', 'organism', 'compounds', 'gene_names', 'gene_sequences']]
-
-df = build_bgc_dataframe('./data')
-df.to_csv('./data/BGC_Data.csv', index=False)
