@@ -9,4 +9,10 @@ COPY . .
 
 EXPOSE 7860
 
-CMD ["python", "space/app.py"]
+# Por defecto se construirá una imagen para desplegar Gradio
+ENV MODE=app
+CMD if [ "$MODE" = "train" ]; then \
+        python src/main.py; \
+    else \
+        python space/app.py; \
+    fi
