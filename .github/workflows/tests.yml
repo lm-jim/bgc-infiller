@@ -1,4 +1,6 @@
 name: CI
+env:
+    WANDB_MODE: "disabled"
 on:
     push:
         branches: ["main"]
@@ -34,7 +36,11 @@ jobs:
               with:
                   lfs: true
                   fetch-depth: 0
+
             - name: Despliegue en Hugging Face
-              run: |
-                  cd space/
-                  git push
+              uses: huggingface/github-action@v1
+              with:
+                  hf_token: ${{ secrets.HF_TOKEN }}
+                  repo_id: lm-jim/bgc-infiller
+                  repo_type: space
+                  path: space
