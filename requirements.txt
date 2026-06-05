@@ -12,3 +12,4 @@ pyarrow==24.0.0
 tqdm==4.67.3
 biopython==1.87
 gradio==6.15.1
+pytest==9.0.3
