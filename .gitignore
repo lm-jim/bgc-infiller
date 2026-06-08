@@ -1,3 +1,4 @@
 models/esm2_trainer/
 wandb/
 __pycache__/
+logs/

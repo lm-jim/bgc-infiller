@@ -2,3 +2,4 @@ model_config: test-model-mini.yaml
 data_path: ./data
 resume_from_checkpoint: True
 log_level: INFO
+fp16: False

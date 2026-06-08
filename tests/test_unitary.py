@@ -101,6 +101,5 @@ def test_tokenize_sequences():
 
     assert tokenized_dataset is not None
 
-# Commented until the rest of CI works
-# def test_train_pipeline_execution():
-#     train.run_training_pipeline(config_file="config/main_config_test.yaml", preprocess_data=False, use_fp16=False)
+def test_train_pipeline_execution():
+    train.run_training_pipeline(config_file="config/main_config_test.yaml", preprocess_data=False, use_fp16=False)
