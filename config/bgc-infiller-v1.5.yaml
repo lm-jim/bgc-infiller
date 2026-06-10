@@ -6,7 +6,6 @@ model_info:
 
 train_params:
     seed: 42
-    split_size: 0.2
 
     epochs: 5
     lr: 0.00005

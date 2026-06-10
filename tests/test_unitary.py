@@ -2,7 +2,8 @@ from datasets import Dataset
 import wandb
 import os
 import pytest
-from src import data_loader, utils, model, train, bgc_tokenizer
+from . import data_preprocessing
+from src import utils, model, train, bgc_tokenizer
 
 def test_load_config():
     config = utils.load_config("config/main_config.yaml")
@@ -64,7 +65,7 @@ def test_raw_bgc_data():
 
 def test_preprocess_data():
     config = utils.load_config("config/main_config.yaml")
-    data_loader.build_bgc_dataframe(f"{config['data_path']}")
+    data_preprocessing.build_bgc_dataframe(f"{config['data_path']}")
 
 def test_wandb_integration():
     config = utils.load_config("config/main_config.yaml")

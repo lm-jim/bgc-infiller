@@ -2,7 +2,7 @@ import logging
 import os
 import torch
 import wandb
-from src import data_loader, utils, model, bgc_tokenizer
+from src import data_preprocessing, utils, model, bgc_tokenizer
 from datasets import Dataset
 from transformers import Trainer
 from transformers import AutoModelForMaskedLM
@@ -34,10 +34,10 @@ def run_training_pipeline(config_file, preprocess_data=True):
     utils.gbl_set_seed(model_config["train_params"]["seed"])
     
     if preprocess_data:
-        df = data_loader.build_bgc_dataframe(f"{config['data_path']}")
-        df.to_csv(f"{config['data_path']}/BGC_Data.csv", index=False)
+        df = data_preprocessing.build_bgc_dataframe(f"{config['data_path']}")
+        df.to_csv(f"{config['data_path']}/formatted_bgc_data.csv", index=False)
 
-    df = utils.read_bgcs_from_csv(f"{config['data_path']}/BGC_Data.csv")
+    df = utils.read_bgcs_from_csv(f"{config['data_path']}/formatted_bgc_data.csv")
 
     logger.info(f"BGC data formatted and loaded successfully. Total BGCs: {len(df)}")
 
@@ -49,7 +49,7 @@ def run_training_pipeline(config_file, preprocess_data=True):
     bgc_types = bgc_tokenizer.get_bgc_special_tokens(df)
     logger.debug(f"Found Special BGC Type Tokens:\n{bgc_types}")
     logger.info(f"Overlapping gene sequences and adding special class tokens...")
-    formatted_df = bgc_tokenizer.format_gene_sequences(df)
+    formatted_df = data_preprocessing.format_gene_sequences(df)
     logger.debug(f"Overlapping successful. Sample of formatted gene sequences:\n{formatted_df.head(5)}")
 
     logger.info(f"Tokenizing gene sequences...")
@@ -57,10 +57,23 @@ def run_training_pipeline(config_file, preprocess_data=True):
     tokenized_dataset = bgc_tokenizer.tokenize_sequences(dataset, base_model, base_tokenizer, bgc_types, config)
     logger.info(f"Successfully tokenized gene sequences.")
 
-    tokenized_dataset = tokenized_dataset.train_test_split(test_size=model_config["train_params"]["split_size"], 
+    if config['val_split_size'] + config['test_split_size'] >= 1.0:
+        logger.error(f"Invalid split sizes: val_split_size + test_split_size is or exceeds 1.0")
+        raise ValueError("Invalid split sizes: val_split_size + test_split_size is or exceeds 1.0")
+
+    first_split = config['val_split_size']
+    second_split = config['test_split_size'] / (1 - config['val_split_size'])
+
+    validation_split = tokenized_dataset.train_test_split(test_size=first_split, 
                                                            seed=model_config["train_params"]["seed"])
-    train_data = tokenized_dataset["train"]
-    eval_data = tokenized_dataset["test"]
+    test_split = validation_split["train"].train_test_split(test_size=second_split, 
+                                                           seed=model_config["train_params"]["seed"])
+                                                           
+    train_data = test_split["train"]
+    eval_data = validation_split["test"]
+    test_data = test_split["test"]
+
+    test_data.save_to_disk(f"{config['data_path']}/test")
 
     logger.info(f"Running training for model {model_name_version}")
     data_collator, training_args = model.get_model_training_hyperparameters(config, base_tokenizer, config['fp16'])
