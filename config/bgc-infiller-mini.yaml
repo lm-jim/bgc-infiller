@@ -7,7 +7,7 @@ model_info:
 train_params:
     seed: 42
 
-    epochs: 0.1
+    epochs: 1
     lr: 0.00005
     batch_size: 64
     weight_decay: 0.01

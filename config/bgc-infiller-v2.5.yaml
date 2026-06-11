@@ -1,0 +1,19 @@
+model_info:
+    model_name: bgc-infiller-esm2
+    model_version: 2.5.0
+    wandb_project: bgc-infiller
+    base_model: facebook/esm2_t12_35M_UR50D
+
+train_params:
+    seed: 42
+
+    epochs: 10
+    lr: 0.00002
+    batch_size: 2
+    weight_decay: 0.01
+    mlm: 0.25
+
+    save_steps: 2500
+    save_total_limit: 5
+    logging_steps: 50
+    eval_steps: 2500

@@ -21,7 +21,7 @@ def run_training_pipeline(config_file, preprocess_data=True):
     logger = logging.getLogger(__name__)
     print(f"Logging setup complete at level: {config['log_level']}")
     logger.info(f"Switching to logging mode from now on.")
-
+    
     logger.info(f"Initializing Weights & Biases...")
     wandb.init(
         project=model_config["model_info"]["wandb_project"],
