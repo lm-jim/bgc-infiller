@@ -4,6 +4,7 @@ import random
 import torch
 from transformers import AutoTokenizer, AutoModelForMaskedLM
 
+# Mapa del tipo "nombre de especie" -> "enlace de imagen" para la visualización posterior.
 species_images = {
     "Micromonospora maris": "https://masscience.com/wp-content/uploads/2015/12/image_0068.jpg",
     "Streptomyces": "https://actinobase.org/images/thumb/e/e4/Streptomyces.png/300px-Streptomyces.png",
@@ -14,79 +15,101 @@ species_images = {
     "Unknown": "https://static.thenounproject.com/png/3674270-200.png"
 }
 
+# Repositorio Hugging Face de los modelos a utilizar.
 model_repo = "lm-jim/bgc-infiller"
 
+# Descarga de tokenizador (común a los modelos) y versiones de los modelos.
 tokenizer = AutoTokenizer.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.0")
 
 model_v1_1 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v1.1")
 model_v1_5 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v1.5")
 model_v2_0 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.0")
 
+# Función que actualizará la imagen acorde a la especie seleccionada en los ejemplos.
 def update_species_image(especie):
     url = species_images.get(especie, species_images["Unknown"])
     return url
 
+# Función que, dada una secuencia, sustituirá 5 proteinas de forma aleatoria por un token de máscara <mask>.
 def randomize_masking(sequence):
     if len(sequence) == 0:
         return ""
-
+    
+    # División de la secuencia en tokens por medio de los espacios.
     tokens = sequence.split()
+
+    # Se obtienen los elementos a enmascarar de forma aleatoria.
     tokens_to_mask = random.sample(range(len(tokens)), 5)
+    
+    # Cada elemento se sustituye por '<mask>'.
     for i in tokens_to_mask:
         if len(tokens[i]) == 1:
             tokens[i] = '<mask>'
 
+    # Se devuelve el resultado como string único.
     return " ".join(tokens)
 
+# Función que utiliza el modelo indicado para predecir los tokens de máscara en la secuencia indicada, basándose en un índice de creatividad.
 def infill_protein(sequence, model, creativity):
     if "<mask>" not in sequence:
         return "Please, mask the amino acid sequence with the <mask> token."
     
     time.sleep(0.5)
 
+    # Mapeo del argumento de entrada como string al objeto del modelo correspondiente.
     model_mapping = {
         "bgc-infiller-8M-v1.1": model_v1_1,
         "bgc-infiller-8M-v1.5": model_v1_5,
         "bgc-infiller-35M-v2.0": model_v2_0
     }
-    
     selected_model = model_mapping[model]
     
+    # Se intenta utilizar GPU en caso de estar disponible.
     device = "cuda" if torch.cuda.is_available() else "cpu"
     selected_model.to(device)
     
+    # Tokenización de la secuencia de entrada.
     inputs = tokenizer(sequence, return_tensors="pt").to(device)
     print(inputs['input_ids'])
-    masked_indices = (inputs["input_ids"] == tokenizer.mask_token_id).nonzero(as_tuple=True)[1]
 
+    # Se identifican las posiciones de los tokens de enmascaramiento en la secuencia.
+    masked_indices = (inputs["input_ids"] == tokenizer.mask_token_id).nonzero(as_tuple=True)[0]
+
+    # Predicciones del modelo...
     with torch.no_grad():
         outputs = selected_model(**inputs)
         logits = outputs.logits
-    
     print(logits)
+    
+    # Se copia la secuencia de entrada para ir sustituyendo los tokens <mask> por predicciones.
     predicted_ids = inputs["input_ids"][0]
     
     for i in masked_indices:
-
+        # Se extraen las probabilidades de cada token de los logits.
         token_probability = logits[0, i]
         
+        # Si se incluye creatividad, se aplica muestreo estocástico a las predicciones.
         if creativity > 0:
             normalized_probs = torch.softmax(token_probability / (creativity / 10), dim=-1)
             predicted_token = torch.multinomial(normalized_probs, num_samples=1).item()
+
+        # Si la creatividad está desactivada, simplemente se selecciona la predicción de mayor probabilidad.
         else:
             predicted_token = token_probability.argmax(dim=-1).item()
 
+        # Se reemplaza <mask> por el aminoácido predicho.
         predicted_ids[i] = predicted_token
         
+    # Decodificación final de la secuencia sin tokens de enmascaramiento, devolviéndose como string.
     infilled_sequence = tokenizer.decode(predicted_ids, skip_special_tokens=True)
-    
     return infilled_sequence
 
-
+# Estructura de la página de Gradio.
 with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
     gr.Markdown("# 🧬 Biosynthetic Gene Cluster (BGC) Infiller 🧬")
     gr.Markdown("A fine-tuned ESM2 model for infilling BGCs (Biosynthetic Gene Clusters)")
 
+    # Columna con información del microorganismo del BGC de ejemplo seleccionado.
     with gr.Row():
         input_species = gr.Textbox(
                 label="Organism Species",
@@ -107,6 +130,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
             interactive=False,
         )
 
+    # Columna con caja de texto editable en la que se introducirá la secuencia proteica a enmascarar.
     with gr.Row():
         with gr.Column():
             input_seq = gr.Textbox(
@@ -114,13 +138,17 @@ with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
                 placeholder="Enter your BGC sequence in the following format:\n\n[CLASS_TYPE] M K V L <mask> L A A I L\n\nAmino acids separated by one space. Maximum of 1000 amino acids or mask tokens.",
                 lines=12
             )
+            # Selección de la versión del modelo a utilizar para la predicción.
             model_selector = gr.Radio(
                 ["bgc-infiller-8M-v1.1", "bgc-infiller-8M-v1.5", "bgc-infiller-35M-v2.0"], 
                 label="Model Selection", 
                 value="bgc-infiller-35M-v2.0"
             )
+
+            # Botón de enmascaramiento automático.
             randomize_button = gr.Button("Randomize Masking 🎲", variant="primary")
             
+        # Columna con caja de texto no editable con los resultados de la predicción.
         with gr.Column():
             output_display = gr.Textbox(label="Infilling Results", lines=12, interactive=False)
             creativity_selector = gr.Slider( 
@@ -129,11 +157,14 @@ with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
                 maximum=10,
                 value=0
             )
+            # Botón para lanzar el pipeline de predicción.
             generate_button = gr.Button("Generate Infilled Protein Sequence 🦠", variant="primary")
-            
+    
+    # Mapeo de eventos de "click" a sus funciones correspondientes.
     randomize_button.click(fn=randomize_masking, inputs=[input_seq], outputs=input_seq)
     generate_button.click(fn=infill_protein, inputs=[input_seq, model_selector, creativity_selector], outputs=output_display)
 
+    # Ejemplos de fragmentos de BGC's clicables para fácil experimentación.
     gr.Examples(
         label="Select an existing organism BGC sequence",
         inputs=[input_species, input_bgc_class, input_seq],
@@ -147,11 +178,13 @@ with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
         ]
     )
 
+    # Evento de cambio de imagen de especie.
     input_species.change(
         fn=update_species_image,
         inputs=[input_species],
         outputs=[organism_img]
     )
 
+# Ejecución principal del servidor de Gradio.
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860)
