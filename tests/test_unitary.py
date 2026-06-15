@@ -54,7 +54,7 @@ def test_tokenize_sequences():
     formatted_df = data_preprocessing.format_gene_sequences(df)
 
     dataset = Dataset.from_pandas(formatted_df)
-    tokenized_dataset = bgc_tokenizer.tokenize_sequences(dataset, base_model, base_tokenizer, bgc_types, config)
+    tokenized_dataset = bgc_tokenizer.tokenize_sequences(dataset, base_model, base_tokenizer, bgc_types)
 
     assert tokenized_dataset is not None
 
