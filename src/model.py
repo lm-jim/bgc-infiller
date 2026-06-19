@@ -5,6 +5,12 @@ def get_base_model(config):
     model_checkpoint = config["model_config"]["model_info"]["base_model"]
     return AutoModelForMaskedLM.from_pretrained(model_checkpoint), AutoTokenizer.from_pretrained(model_checkpoint)
 
+# Función que descarga desde el Hugging Face Hub el modelo y el tokenizer correspondientes.
+def download_model_from_hf(repo_id, model_name_version):
+    model = AutoModelForMaskedLM.from_pretrained(repo_id, subfolder=model_name_version)
+    tokenizer = AutoTokenizer.from_pretrained(repo_id, subfolder=model_name_version)
+    return model, tokenizer
+
 # Función que establece los objetos data_collator y training_args según la configuración especificada.
 def get_model_training_hyperparameters(config, tokenizer, use_fp16=True):
     model_config = config['model_config']

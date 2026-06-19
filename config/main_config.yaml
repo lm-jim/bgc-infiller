@@ -1,4 +1,4 @@
-model_config: bgc-infiller-mini.yaml
+model_config: bgc-infiller-v1.0.0.yaml
 data_path: ./data
 resume_from_checkpoint: True
 log_level: INFO
