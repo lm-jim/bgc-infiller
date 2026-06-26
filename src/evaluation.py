@@ -2,6 +2,7 @@ import logging
 import math
 import os
 
+import torch
 import yaml
 from src import model, utils
 import pandas as pd
@@ -69,7 +70,7 @@ def evaluate_model(config, logger, eval_model, eval_tokenizer, model_name_versio
     metrics["model_name_version"] = model_name_version
     return metrics
 
-def run_evaluation_pipeline(config_file, m_conf=""):
+def run_evaluation_pipeline(config_file, m_conf="", baseline=False):
     print("--- BGC INFILLER EVALUATION PIPELINE BEGIN ---")
 
     # Carga de la configuración principal.
@@ -108,6 +109,14 @@ def run_evaluation_pipeline(config_file, m_conf=""):
     logger.info(f"Downloading {model_name_version} from Hugging Face...")
     eval_model, eval_tokenizer = model.download_model_from_hf("lm-jim/bgc-infiller", model_name_version)
     logger.info(f"{model_name_version} model and tokenizer downloaded successfully.")
+    
+    # Si el parámetro baseline se define a True, se evaluará el modelo base definido, sin fine-tuning
+    if baseline:
+        eval_model, _ = model.get_base_model(config)
+        eval_model.resize_token_embeddings(len(eval_tokenizer))
+        eval_model.lm_head.bias = torch.nn.Parameter(torch.zeros(len(eval_tokenizer)))
+        logger.info(f"Baseline model {config['model_config']['model_info']['base_model']} downloaded successfully.")
+    
 
     # Evaluación de métricas de rendimiento del modelo.
     logger.info(f"Evaluating model...")
@@ -127,11 +136,22 @@ model_configs = [
     "bgc-infiller-v2.5.0.yaml",
 ]
 
+# Modelos que utilizan ESM-2 8M y 35M para evaluar ambos baselines.
+baseline_models = [
+    "bgc-infiller-v1.5.0.yaml",
+    "bgc-infiller-v2.5.0.yaml",
+]
+
+baseline=True
+
 # Ejecución de pipeline de evaluación, una vez por modelo a evaluar.
-for m_conf in model_configs:
-    metrics = run_evaluation_pipeline(os.environ.get('MAIN_CONFIG'), m_conf)
+for m_conf in baseline_models:
+    metrics = run_evaluation_pipeline(os.environ.get('MAIN_CONFIG'), m_conf, baseline)
     all_metrics.append(metrics)
     
 # Guardado en CSV de métricas generadas.
 results_df = pd.DataFrame(all_metrics)[['model_name_version', 'eval_loss', 'perplexity', 'eval_runtime', 'eval_masked_token_accuracy', 'eval_n_masked_tokens']]
-results_df.to_csv("./eval_results/evaluation_results.csv", index=False)
+if not baseline:
+    results_df.to_csv("./eval_results/evaluation_results.csv", index=False)
+else:
+    results_df.to_csv("./eval_results/baseline_results.csv", index=False)

@@ -9,7 +9,7 @@ train_params:
 
     epochs: 1
     lr: 0.00005
-    batch_size: 64
+    batch_size: 2
     weight_decay: 0.01
     mlm: 0.15
 

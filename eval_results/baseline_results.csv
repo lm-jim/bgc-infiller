@@ -1,0 +1,3 @@
+model_name_version,eval_loss,perplexity,eval_runtime,eval_masked_token_accuracy,eval_n_masked_tokens
+bgc-infiller-esm2-v1.5.0,2.255969524383545,9.544542492444581,532.0499,0.34627586052315024,669215
+bgc-infiller-esm2-v2.5.0,1.8945387601852417,6.649480691969044,1323.9566,0.4307599202050163,669215

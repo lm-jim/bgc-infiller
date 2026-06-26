@@ -40,7 +40,7 @@ def run_training_pipeline(config_file, preprocess_data=True):
     # Establecimiento de la semilla global.
     utils.gbl_set_seed(model_config["train_params"]["seed"])
 
-    # Lectura y preprocesado de los datos "crucos" de los BGC's.
+    # Lectura y preprocesado de los datos "crudos" de los BGC's.
     # Si preprocess_data es verdadera, se sustituirá el archivo formatted_bgc_data.csv por un preprocesamiento nuevo.
     # Si es falsa, deberá existir un archivo formatted_bgc_data.csv previamente generado.
     logger.info(f"Loading and formatting raw BGC data...")
