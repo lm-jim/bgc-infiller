@@ -11,6 +11,9 @@ safetensors==0.7.0
 pyarrow==24.0.0
 tqdm==4.67.3
 biopython==1.87
+uvicorn==0.47.0
+fastapi==0.136.1
+pydantic==2.13.4
 gradio==6.15.1
 pytest==9.0.3
 accelerate==0.31.0
