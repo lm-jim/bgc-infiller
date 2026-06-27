@@ -1,8 +1,8 @@
-torch
-transformers
-pandas
-numpy
-gradio
-uvicorn
-fastapi
-pydantic
+torch==2.2.2
+transformers==4.41.2
+pandas==2.2.3
+numpy==1.26.3
+gradio==6.15.1
+uvicorn==0.47.0
+fastapi==0.136.1
+pydantic==2.13.4

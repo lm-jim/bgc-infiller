@@ -11,7 +11,7 @@ import os
 
 # Mapa del tipo "nombre de especie" -> "enlace de imagen" para la visualización posterior.
 species_images = {
-    "Micromonospora maris": "https://masscience.com/wp-content/uploads/2015/12/image_0068.jpg",
+    "Micromonospora maris": "https://alchetron.com/cdn/micromonospora-29869a48-4fe2-402f-bd09-37eb8adca6e-resize-750.jpg",
     "Streptomyces": "https://actinobase.org/images/thumb/e/e4/Streptomyces.png/300px-Streptomyces.png",
     "Streptomyces bottropensis": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPuTt-opTY297E33iSfti8tLoFJg4lbZ4puA&s",
     "Cylindrospermopsis raciborskii T3": "https://inaturalist-open-data.s3.amazonaws.com/photos/12099755/large.jpg",
@@ -110,7 +110,7 @@ def infill_protein(sequence, model, creativity):
     return infilled_sequence
 
 # Estructura de la página de Gradio.
-with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
+with gr.Blocks(title="BGC Infiller 🧬") as demo:
     gr.Markdown("# 🧬 Biosynthetic Gene Cluster (BGC) Infiller 🧬")
     gr.Markdown("A fine-tuned ESM2 model for infilling BGCs (Biosynthetic Gene Clusters)")
 
@@ -222,11 +222,9 @@ def api_randomize(req: MaskRequest):
         "masked": result
     })
 
-# Montaje de aplicación gradio a la app de FastAPI
+# Montaje de aplicación Gradio a la app de FastAPI
 app = gr.mount_gradio_app(app, demo, path="/", theme=gr.themes.Soft())
 
 # Ejecución de la aplicación por Uvicorn
 if __name__ == "__main__":
-    # Si no estamos en un Space de Hugging Face, ejecutar Uvicorn
-    if not os.getenv("SPACE_ID"):
-        uvicorn.run(app, host="0.0.0.0", port=7860)
+    uvicorn.run(app, host="0.0.0.0", port=7860)
