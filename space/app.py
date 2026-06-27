@@ -37,7 +37,7 @@ def update_species_image(especie):
     return url
 
 # Función que, dada una secuencia, sustituirá 5 proteinas de forma aleatoria por un token de máscara <mask>.
-def randomize_masking(sequence):
+def randomize_masking(sequence, quantity=5):
     if len(sequence) == 0:
         return ""
     
@@ -45,7 +45,7 @@ def randomize_masking(sequence):
     tokens = sequence.split()
 
     # Se obtienen los elementos a enmascarar de forma aleatoria.
-    tokens_to_mask = random.sample(range(len(tokens)), 5)
+    tokens_to_mask = random.sample(range(len(tokens)), quantity)
     
     # Cada elemento se sustituye por '<mask>'.
     for i in tokens_to_mask:
@@ -170,7 +170,7 @@ with gr.Blocks(title="BGC Infiller 🧬") as demo:
             # Botón para lanzar el pipeline de predicción.
             generate_button = gr.Button("Generate Infilled Protein Sequence 🦠", variant="primary")
     
-    
+
     # Ejemplos de fragmentos de BGC's clicables para fácil experimentación.
     gr.Examples(
         label="Select an existing organism BGC sequence",
@@ -207,6 +207,7 @@ class InfillRequest(BaseModel):
 # Cuerpo esperado para petición de masking
 class MaskRequest(BaseModel):
     sequence: str
+    quantity: int = 5
 
 app = FastAPI(title="BGC Infiller API")
 
@@ -222,7 +223,7 @@ def api_infill(req: InfillRequest):
 # Procesamiento de petición POST /randomize
 @app.post("/randomize")
 def api_randomize(req: MaskRequest):
-    result = randomize_masking(req.sequence)
+    result = randomize_masking(req.sequence, quantity=req.quantity)
     return JSONResponse({
         "original": req.sequence,
         "masked": result
