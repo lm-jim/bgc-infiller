@@ -139,7 +139,7 @@ with gr.Blocks(title="BGC Infiller 🧬") as demo:
     with gr.Row(equal_height=True):
         with gr.Column():
             input_seq = gr.Textbox(
-                label="Masked BGC Sequence Input",
+                label="Example BGC Sequence",
                 placeholder="Enter your BGC sequence in the following format:\n\n[CLASS_TYPE] M K V L <mask> L A A I L\n\nAmino acids separated by one space. Maximum of 1000 amino acids or mask tokens.",
                 lines=20
             )
