@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModelForMaskedLM
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
+import os
 
 # Mapa del tipo "nombre de especie" -> "enlace de imagen" para la visualización posterior.
 species_images = {
@@ -226,4 +227,6 @@ app = gr.mount_gradio_app(app, demo, path="/", theme=gr.themes.Soft())
 
 # Ejecución de la aplicación por Uvicorn
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    # Si no estamos en un Space de Hugging Face, ejecutar Uvicorn
+    if not os.getenv("SPACE_ID"):
+        uvicorn.run(app, host="0.0.0.0", port=7860)
