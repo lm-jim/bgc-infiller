@@ -136,13 +136,22 @@ with gr.Blocks(title="BGC Infiller 🧬") as demo:
         )
 
     # Columna con caja de texto editable en la que se introducirá la secuencia proteica a enmascarar.
-    with gr.Row():
+    with gr.Row(equal_height=True):
         with gr.Column():
             input_seq = gr.Textbox(
                 label="Masked BGC Sequence Input",
                 placeholder="Enter your BGC sequence in the following format:\n\n[CLASS_TYPE] M K V L <mask> L A A I L\n\nAmino acids separated by one space. Maximum of 1000 amino acids or mask tokens.",
-                lines=12
+                lines=20
             )
+
+            # Botón de enmascaramiento automático.
+            with gr.Row(scale=0): 
+                randomize_button = gr.Button("Randomize Masking 🎲", variant="primary")
+            
+        # Columna con caja de texto no editable con los resultados de la predicción.
+        with gr.Column():
+            output_display = gr.Textbox(label="Infilling Results", lines=12, interactive=False)
+            
             # Selección de la versión del modelo a utilizar para la predicción.
             model_selector = gr.Radio(
                 ["bgc-infiller-8M-v1.0", "bgc-infiller-8M-v1.5", "bgc-infiller-8M-v2.0", "bgc-infiller-35M-v2.5"], 
@@ -150,25 +159,18 @@ with gr.Blocks(title="BGC Infiller 🧬") as demo:
                 value="bgc-infiller-35M-v2.5"
             )
 
-            # Botón de enmascaramiento automático.
-            randomize_button = gr.Button("Randomize Masking 🎲", variant="primary")
-            
-        # Columna con caja de texto no editable con los resultados de la predicción.
-        with gr.Column():
-            output_display = gr.Textbox(label="Infilling Results", lines=12, interactive=False)
+            # Selector slider de creatividad
             creativity_selector = gr.Slider( 
                 label="Model Creativity",
                 minimum=0, 
                 maximum=10,
                 value=0
             )
+            
             # Botón para lanzar el pipeline de predicción.
             generate_button = gr.Button("Generate Infilled Protein Sequence 🦠", variant="primary")
     
-    # Mapeo de eventos de "click" a sus funciones correspondientes.
-    randomize_button.click(fn=randomize_masking, inputs=[input_seq], outputs=input_seq)
-    generate_button.click(fn=infill_protein, inputs=[input_seq, model_selector, creativity_selector], outputs=output_display)
-
+    
     # Ejemplos de fragmentos de BGC's clicables para fácil experimentación.
     gr.Examples(
         label="Select an existing organism BGC sequence",
@@ -182,6 +184,10 @@ with gr.Blocks(title="BGC Infiller 🧬") as demo:
             ["Streptomyces viridochromogenes", "Saccharide", "[SACCHARIDE] M V V A V C A F R L E N V R R H L R H N L D Q L N G D E Y V V L L D R P V T P E A E K V A T Q V N E A G G T M R I L G A T R G L S A S R N T V L R E W A D R H V L F V D D D V R L E A S A V D A V R A A F R A G A H V V G A R L R P P R E L R R L P W F L S S G Q F H L V G W H R D R G D I K I W G A C M G V D A D F A R R Q G L T F D L D L S R T G V N L Q S G E D T S F I A L M K E A G A R E L P A A R A R G R P R C R P R P A H P P L P P A P G L L A G C V R R R D G T S R R R D S A R S"]
         ]
     )
+
+    # Mapeo de eventos de "click" a sus funciones correspondientes.
+    randomize_button.click(fn=randomize_masking, inputs=[input_seq], outputs=input_seq)
+    generate_button.click(fn=infill_protein, inputs=[input_seq, model_selector, creativity_selector], outputs=output_display)
 
     # Evento de cambio de imagen de especie.
     input_species.change(
