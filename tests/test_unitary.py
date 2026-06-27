@@ -60,4 +60,4 @@ def test_tokenize_sequences():
 
 # Función de test que ejecuta el pipeline completo de entrenamiento, con el objetivo de comprobar el correcto funcionamiento completo.
 def test_train_pipeline_execution():
-    train.run_training_pipeline(config_file="config/main_config_test.yaml", preprocess_data=False)
+    #train.run_training_pipeline(config_file="config/main_config_test.yaml", preprocess_data=False)

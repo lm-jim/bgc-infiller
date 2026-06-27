@@ -3,3 +3,6 @@ transformers
 pandas
 numpy
 gradio
+uvicorn
+fastapi
+pydantic

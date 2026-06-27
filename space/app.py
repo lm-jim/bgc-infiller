@@ -1,8 +1,12 @@
 import gradio as gr
 import time
 import random
+from pydantic import BaseModel
 import torch
 from transformers import AutoTokenizer, AutoModelForMaskedLM
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import uvicorn
 
 # Mapa del tipo "nombre de especie" -> "enlace de imagen" para la visualización posterior.
 species_images = {
@@ -19,11 +23,12 @@ species_images = {
 model_repo = "lm-jim/bgc-infiller"
 
 # Descarga de tokenizador (común a los modelos) y versiones de los modelos.
-tokenizer = AutoTokenizer.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.0")
+tokenizer = AutoTokenizer.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.5.0")
 
-model_v1_1 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v1.1")
-model_v1_5 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v1.5")
-model_v2_0 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.0")
+model_v1_0 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v1.0.0")
+model_v1_5 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v1.5.0")
+model_v2_0 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.0.0")
+model_v2_5 = AutoModelForMaskedLM.from_pretrained(model_repo, subfolder="bgc-infiller-esm2-v2.5.0")
 
 # Función que actualizará la imagen acorde a la especie seleccionada en los ejemplos.
 def update_species_image(especie):
@@ -58,9 +63,10 @@ def infill_protein(sequence, model, creativity):
 
     # Mapeo del argumento de entrada como string al objeto del modelo correspondiente.
     model_mapping = {
-        "bgc-infiller-8M-v1.1": model_v1_1,
+        "bgc-infiller-8M-v1.0": model_v1_0,
         "bgc-infiller-8M-v1.5": model_v1_5,
-        "bgc-infiller-35M-v2.0": model_v2_0
+        "bgc-infiller-8M-v2.0": model_v2_0,
+        "bgc-infiller-35M-v2.5": model_v2_5
     }
     selected_model = model_mapping[model]
     
@@ -70,16 +76,14 @@ def infill_protein(sequence, model, creativity):
     
     # Tokenización de la secuencia de entrada.
     inputs = tokenizer(sequence, return_tensors="pt").to(device)
-    print(inputs['input_ids'])
 
     # Se identifican las posiciones de los tokens de enmascaramiento en la secuencia.
-    masked_indices = (inputs["input_ids"] == tokenizer.mask_token_id).nonzero(as_tuple=True)[0]
+    masked_indices = (inputs["input_ids"] == tokenizer.mask_token_id).nonzero(as_tuple=True)[1]
 
     # Predicciones del modelo...
     with torch.no_grad():
         outputs = selected_model(**inputs)
         logits = outputs.logits
-    print(logits)
     
     # Se copia la secuencia de entrada para ir sustituyendo los tokens <mask> por predicciones.
     predicted_ids = inputs["input_ids"][0]
@@ -140,9 +144,9 @@ with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
             )
             # Selección de la versión del modelo a utilizar para la predicción.
             model_selector = gr.Radio(
-                ["bgc-infiller-8M-v1.1", "bgc-infiller-8M-v1.5", "bgc-infiller-35M-v2.0"], 
+                ["bgc-infiller-8M-v1.0", "bgc-infiller-8M-v1.5", "bgc-infiller-8M-v2.0", "bgc-infiller-35M-v2.5"], 
                 label="Model Selection", 
-                value="bgc-infiller-35M-v2.0"
+                value="bgc-infiller-35M-v2.5"
             )
 
             # Botón de enmascaramiento automático.
@@ -185,6 +189,41 @@ with gr.Blocks(theme=gr.themes.Soft(), title="BGC Infiller 🧬") as demo:
         outputs=[organism_img]
     )
 
-# Ejecución principal del servidor de Gradio.
+# Creación de endpoints API con FastAPI y Uvicorn
+
+# Cuerpo esperado para petición de infilling
+class InfillRequest(BaseModel):
+    sequence: str
+    model: str = "bgc-infiller-35M-v2.5"
+    creativity: float = 0
+
+# Cuerpo esperado para petición de masking
+class MaskRequest(BaseModel):
+    sequence: str
+
+app = FastAPI(title="BGC Infiller API")
+
+# Procesamiento de petición POST /infill
+@app.post("/infill")
+def api_infill(req: InfillRequest):
+    result = infill_protein(req.sequence, req.model, req.creativity)
+    return JSONResponse({
+        "original": req.sequence,
+        "result": result
+    })
+
+# Procesamiento de petición POST /randomize
+@app.post("/randomize")
+def api_randomize(req: MaskRequest):
+    result = randomize_masking(req.sequence)
+    return JSONResponse({
+        "original": req.sequence,
+        "masked": result
+    })
+
+# Montaje de aplicación gradio a la app de FastAPI
+app = gr.mount_gradio_app(app, demo, path="/", theme=gr.themes.Soft())
+
+# Ejecución de la aplicación por Uvicorn
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    uvicorn.run(app, host="0.0.0.0", port=7860)
